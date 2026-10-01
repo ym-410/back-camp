@@ -104,3 +104,10 @@ def me():
             "id": user[0],
             "email": user[1]
     }, 200
+
+# logout
+@auth_bp.route("/logout", methods=["POST"])
+def logout():
+    session.pop("user_id", None)
+
+    return {"message": "logged_out"}, 200
