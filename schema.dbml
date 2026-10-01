@@ -1,0 +1,21 @@
+Table rooms {
+  id integer [pk]
+  name varchar [not null]
+  capacity integer [not null]
+}
+
+Table users {
+  id integer [pk]
+  email text [not null, unique]
+  name text [not null]
+}
+
+Table reservations {
+  id integer [pk]
+  user_id integer [not null]
+  room_id integer [not null]
+}
+
+Ref: reservations.user_id > users.id
+Ref: reservations.room_id > rooms.id
+

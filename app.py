@@ -1,47 +1,27 @@
-from flask import Flask, request
+from flask import Flask
+from werkzeug.exceptions import BadRequest, NotFound, InternalServerError
+from routes.rooms import rooms_bp
+from routes.auth import auth_bp
+
 
 app = Flask(__name__)
 
-rooms = [
-        {
-            "id": 1,
-            "name": "Room 101",
-            "capacity": 30
-        },
-        {
-            "id": 2,
-            "name": "Room 102",
-            "capacity": 20
-        }
-]
+app.register_blueprint(rooms_bp)
+app.register_blueprint(auth_bp)
 
-@app.route("/hello")
-def hello():
-    return "Hello", 201
+# エラーハンドラ
+@app.errorhandler(BadRequest)
+def handle_bad_request(error):
+    return {"error": "invalid_json"}, 400
 
-@app.route("/rooms")
-def get_rooms():
-    return rooms
+@app.errorhandler(NotFound)
+def handle_not_found(error):
+    return {"error": "not_found"}, 404
 
-@app.route("/rooms/<int:room_id>")
-def get_room(room_id):
-    for room in rooms:
-        if room["id"] == room_id:
-            return room
-    return {"error": "room_not_found"}, 404
+@app.errorhandler(InternalServerError)
+def handle_internal_server_error(error):
+    return{"error": "internal_server_error"}, 500
 
-@app.route("/rooms", methods=["POST"])
-def create_room():
-    data = request.get_json()
-    new_room = {
-            "id": len(rooms) + 1,
-            "name": data["name"],
-            "capacity": data["capacity"]
-    }
-
-    rooms.append(new_room)
-
-    return new_room, 201
 
 if __name__ == "__main__":
     app.run(debug=True)
