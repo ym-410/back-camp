@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import get_db
 
@@ -66,6 +66,8 @@ def login():
 
     if not check_password_hash(user[2], password):
         return {"error": "invalid_credentials"}, 401
+
+    session["user_id"] = user[0]
 
     return {
             "id": user[0],
