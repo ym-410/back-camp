@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, request
 from db import get_db
 
 rooms_bp = Blueprint("rooms", __name__)
@@ -28,13 +28,6 @@ def get_rooms():
         })
     
     return result
-
-from flask import Blueprint, request
-
-from db import get_db
-
-
-rooms_bp = Blueprint("rooms", __name__)
 
 # 一件表示
 @rooms_bp.route("/rooms/<int:room_id>")
