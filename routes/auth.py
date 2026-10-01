@@ -74,4 +74,33 @@ def login():
             "email": user[1]
     }, 200
 
+@auth_bp.route("/me")
+def me():
+    user_id = session.get("user_id")
 
+    if user_id is None:
+        return {"error": "unauthorizzed"}, 401
+
+    connection = get_db()
+    cursor = connection.cursor()
+
+    cursor.execute(
+            """
+            SELECT
+                id,
+                email
+            FROM users
+            WHERE id = ?
+            """, (user_id,)
+    )
+
+    user = cursor.fetchone()
+    connection.close()
+
+    if user is None:
+        return {"error": "unauthorized"}, 401
+
+    return {
+            "id": user[0],
+            "email": user[1]
+    }, 200
