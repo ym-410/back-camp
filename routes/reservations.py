@@ -36,6 +36,7 @@ def create_reservation():
             "room_id": room_id
     }, 201
 
+# 予約取得
 @reservations_bp.route("/my-reservations")
 def get_my_reservations():
     user_id = session.get("user_id")
@@ -71,3 +72,53 @@ def get_my_reservations():
 
     return result, 200
 
+# 予約1件取得し編集
+@reservations_bp.route("/reservations/<int:reservation_id>", methods=["PUT"])
+def update_reservation(reservation_id):
+    user_id = session.get("user_id")
+
+    if user_id is None:
+        return {"error": "unauthorized"}, 401
+
+    data = request.get_json()
+
+    connection = get_db()
+    cursor = connection.cursor()
+
+    cursor.execute(
+            """
+            SELECT
+                id,
+                user_id,
+                room_id
+            FROM reservations
+            WHERE id = ?
+            """, (reservation_id,)
+    )
+
+    reservation = cursor.fetchone()
+
+    if reservation is None:
+        connection.close()
+        return {"error": "not_found"}, 404
+
+    if user_id != reservation[1]:
+        connection.close()
+        return {"error": "forbidden"}, 403
+
+    cursor.execute(
+            """
+            UPDATE reservations
+            SET room_id = ?
+            WHERE id = ?
+            """, (data["room_id"], reservation_id)
+    )
+
+    connection.commit()
+    connection.close()
+
+    return {
+            "id": reservation_id,
+            "user_id": user_id,
+            "room_id": data["room_id"]
+    }, 200
