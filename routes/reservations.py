@@ -14,15 +14,25 @@ def create_reservation():
     data = request.get_json()
 
     room_id = data["room_id"]
+    start_time = data["start_time"]
+    end_time = data["end_time"]
+
+    if start_time >= end_time:
+        return {"error": "invalid_time_range"}, 400
 
     connection = get_db()
     cursor = connection.cursor()
 
     cursor.execute(
             """
-            INSERT INTO reservations (user_id, room_id)
-            VALUES (?, ?)
-            """, (user_id, room_id)
+            INSERT INTO reservations (
+                user_id,
+                room_id,
+                start_time,
+                end_time
+            )
+            VALUES (?, ?, ?, ?)
+            """, (user_id, room_id, start_time, end_time)
     )
 
     reservation_id = cursor.lastrowid
@@ -33,7 +43,9 @@ def create_reservation():
     return {
             "id": reservation_id,
             "user_id": user_id,
-            "room_id": room_id
+            "room_id": room_id,
+            "start_time": start_time,
+            "end_time": end_time
     }, 201
 
 # 予約取得
