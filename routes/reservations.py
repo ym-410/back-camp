@@ -98,6 +98,10 @@ def update_reservation(reservation_id):
 
     reservation = cursor.fetchone()
 
+    if reservation is None:
+        connection.close()
+        return {"error": "not_found"}, 404
+
     cursor.execute(
         """
         SELECT is_admin FROM users
@@ -105,10 +109,6 @@ def update_reservation(reservation_id):
         """, (user_id,)
     )
     user = cursor.fetchone()
-
-    if reservation is None:
-        connection.close()
-        return {"error": "not_found"}, 404
 
     if user_id != reservation[1] and user[0] != 1:
         connection.close()
@@ -150,14 +150,21 @@ def delete_reservation(reservation_id):
             WHERE id = ?
             """, (reservation_id,)
     )
-
     reservation = cursor.fetchone()
 
     if reservation is None:
         connection.close()
         return {"error": "reservation_not_found"}, 404
 
-    if reservation[1] != user_id:
+    cursor.execute(
+        """
+        SELECT is_admin FROM users
+        WHERE id = ?
+        """, (user_id,)
+    )
+    user = cursor.fetchone()
+
+    if reservation[1] != user_id and user[0] != 1:
         connection.close()
         return {"error": "forbidden"}, 403
 
