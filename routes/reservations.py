@@ -23,6 +23,23 @@ def create_reservation():
     connection = get_db()
     cursor = connection.cursor()
 
+    # 時間範囲確認
+    cursor.execute(
+        """
+        SELECT id
+        FROM reservations
+        WHERE room_id = ?
+            AND start_time < ?
+            AND end_time > ?
+        """, (room_id, end_time, start_time)
+    )
+
+    conflict = cursor.fetchone()
+
+    if conflict is not None:
+        connection.close()
+        return {"error": "room_already_reserved"}, 409
+
     cursor.execute(
             """
             INSERT INTO reservations (
