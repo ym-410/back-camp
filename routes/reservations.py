@@ -21,44 +21,51 @@ def create_reservation():
         return {"error": "invalid_time_range"}, 400
 
     connection = get_db()
-    cursor = connection.cursor()
-    # 書き込み用ロックを確保
-    connection.execute("BEGIN IMMEDIATE")
 
-    # 時間範囲確認
-    cursor.execute(
-        """
-        SELECT id
-        FROM reservations
-        WHERE room_id = ?
-            AND start_time < ?
-            AND end_time > ?
-        """, (room_id, end_time, start_time)
-    )
+    try:
+        cursor = connection.cursor()
+        # 書き込み用ロックを確保
+        connection.execute("BEGIN IMMEDIATE")
 
-    conflict = cursor.fetchone()
-
-    if conflict is not None:
-        connection.rollback()
-        connection.close()
-        return {"error": "room_already_reserved"}, 409
-
-    cursor.execute(
+        # 時間範囲確認
+        cursor.execute(
             """
-            INSERT INTO reservations (
-                user_id,
-                room_id,
-                start_time,
-                end_time
-            )
-            VALUES (?, ?, ?, ?)
-            """, (user_id, room_id, start_time, end_time)
-    )
+            SELECT id
+            FROM reservations
+            WHERE room_id = ?
+                AND start_time < ?
+                AND end_time > ?
+            """, (room_id, end_time, start_time)
+        )
 
-    reservation_id = cursor.lastrowid
+        conflict = cursor.fetchone()
 
-    connection.commit()
-    connection.close()
+        if conflict is not None:
+            connection.rollback()
+            return {"error": "room_already_reserved"}, 409
+
+        cursor.execute(
+                """
+                INSERT INTO reservations (
+                    user_id,
+                    room_id,
+                    start_time,
+                    end_time
+                )
+                VALUES (?, ?, ?, ?)
+                """, (user_id, room_id, start_time, end_time)
+        )
+    
+        reservation_id = cursor.lastrowid
+
+        connection.commit()
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
 
     return {
             "id": reservation_id,
