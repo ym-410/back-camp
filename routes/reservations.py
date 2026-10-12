@@ -22,6 +22,8 @@ def create_reservation():
 
     connection = get_db()
     cursor = connection.cursor()
+    # 書き込み用ロックを確保
+    connection.execute("BEGIN IMMEDIATE")
 
     # 時間範囲確認
     cursor.execute(
@@ -37,6 +39,7 @@ def create_reservation():
     conflict = cursor.fetchone()
 
     if conflict is not None:
+        connection.rollback()
         connection.close()
         return {"error": "room_already_reserved"}, 409
 
