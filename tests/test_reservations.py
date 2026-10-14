@@ -1,7 +1,7 @@
 from app import app
 
 def test_create_reservation_without_login(test_db):
-    client = app.test_client()
+    client = app.test_client() # テスト用クライアント
 
     response = client.post(
             "/reservations",
@@ -19,7 +19,7 @@ def test_create_reservation_without_login(test_db):
 def test_create_reservations(test_db):
     client = app.test_client()
 
-    with client.session_transaction() as sess:
+    with client.session_transaction() as sess: # テストクライアントのsessionに直接入れる
         sess["user_id"] = 1
 
     response = client.post(

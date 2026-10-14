@@ -7,7 +7,7 @@ import db
 TEST_DB = "test.db"
 
 
-@pytest.fixture
+@pytest.fixture # テスト用の準備処理
 def test_db():
     db.DB_PATH = TEST_DB
 
