@@ -1,6 +1,6 @@
 from app import app
 
-def test_create_reservation_without_login():
+def test_create_reservation_without_login(test_db):
     client = app.test_client()
 
     response = client.post(
