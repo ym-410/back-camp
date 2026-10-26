@@ -40,3 +40,33 @@ def test_create_reservations(test_db):
     assert data["start_time"] == "2026-10-06 10:00"
     assert data["end_time"] == "2026-10-06 11:00"
 
+def test_duplicate_reservationo(test_db):
+    client = app.test_client()
+
+    with client.session_transaction() as sess:
+        sess["user_id"] = 1
+
+    first_response = client.post(
+            "/reservations",
+            json={
+                "room_id": 1,
+                "start_time": "2026-10-06 10:00",
+                "end_time": "292565-10-06 11:00",
+            },
+    )
+
+    second_response = client.post(
+            "/reservations",
+            json={
+                "room_id": 1,
+                "start_time": "2026-10-06 10:30",
+                "end_time": "2026-10-06 11:30",
+            },
+    )
+
+    assert first_response.status_code == 201
+    assert second_response.status_code == 409
+    assert second_response.get_json() == {
+            "error": "room_already_reserved"
+    }
+
