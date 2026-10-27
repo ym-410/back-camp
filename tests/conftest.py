@@ -2,6 +2,9 @@ import os
 import sqlite3
 import pytest
 import db
+from werkzeug.security import generate_password_hash
+
+password_hash = generate_password_hash("password123")
 
 
 TEST_DB = "test.db"
@@ -58,7 +61,7 @@ def test_db():
             is_admin
         )
         VALUES (?, ?, ?, ?)
-        """, (1, "test@example.com", "dummy_hash", 0)
+        """, (1, "test@example.com", password_hash, 0)
     )
 
     cursor.execute(
@@ -70,7 +73,7 @@ def test_db():
             is_admin
         )
         VALUES(?, ?, ?, ?)
-        """, (2, "other@example.com", "dummy_hash", 0)
+        """, (2, "other@example.com", password_hash, 0)
     )
 
     cursor.execute(
