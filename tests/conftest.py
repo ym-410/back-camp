@@ -63,6 +63,18 @@ def test_db():
 
     cursor.execute(
         """
+        INSERT INTO users(
+            id,
+            email,
+            password_hash,
+            is_admin
+        )
+        VALUES(?, ?, ?, ?)
+        """, (2, "other@example.com", "dummy_hash", 0)
+    )
+
+    cursor.execute(
+        """
         INSERT INTO rooms(
             id,
             name,

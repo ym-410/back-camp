@@ -116,3 +116,37 @@ def test_delete_own_reservation(test_db):
     connection.close()
 
     assert reservation is None
+
+def test_delete_other_users_reservation(test_db):
+
+    client = app.test_client()
+
+    with client.session_transaction() as sess: # テストクライアントのsessionに直接入れる
+        sess["user_id"] = 2
+
+    connection = sqlite3.connect(db.DB_PATH)
+    cursor = connection.cursor()
+    
+    cursor.execute(
+        """
+        INSERT INTO reservations (
+            user_id,
+            room_id,
+            start_time,
+            end_time
+        )
+        VALUES(?, ?, ?, ?)
+        """, (1, 1, "2026-10-06 12:00", "2026-10-06 13:00",),
+    )
+
+    reservation_id = cursor.lastrowid
+
+    connection.commit()
+    connection.close()
+
+    response = client.delete(
+        f"/reservations/{reservation_id}"
+    )
+
+    assert response.status_code == 403
+    assert response.get_json() == {"error": "forbidden"}
