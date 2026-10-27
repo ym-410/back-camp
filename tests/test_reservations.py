@@ -1,4 +1,6 @@
 from app import app
+import sqlite3
+import db
 
 def test_create_reservation_without_login(test_db):
     client = app.test_client() # テスト用クライアント
@@ -51,7 +53,7 @@ def test_duplicate_reservationo(test_db):
             json={
                 "room_id": 1,
                 "start_time": "2026-10-06 10:00",
-                "end_time": "292565-10-06 11:00",
+                "end_time": "2026-10-06 11:00",
             },
     )
 
@@ -70,3 +72,47 @@ def test_duplicate_reservationo(test_db):
             "error": "room_already_reserved"
     }
 
+def test_delete_own_reservation(test_db):
+    client = app.test_client()
+
+    with client.session_transaction() as sess: # テストクライアントのsessionに直接入れる
+        sess["user_id"] = 1
+
+    connection = sqlite3.connect(db.DB_PATH)
+    connection.execute(
+
+        """
+        INSERT INTO reservations(
+            id,
+            user_id,
+            room_id,
+            start_time,
+            end_time
+        )
+        VALUES (?, ?, ?, ?, ?)
+        """, (1, 1, 1, "2026-10-06 10:00", "2026-10-06 11:00",),
+    )
+
+    connection.commit()
+    connection.close()
+
+    response = client.delete("/reservations/1")
+
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "deleted"}
+
+    connection = sqlite3.connect(db.DB_PATH)
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT id
+        FROM reservations
+        WHERE id = ?
+        """, (1,),
+    )
+
+    reservation = cursor.fetchone()
+    connection.close()
+
+    assert reservation is None
