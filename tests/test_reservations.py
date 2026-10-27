@@ -150,3 +150,18 @@ def test_delete_other_users_reservation(test_db):
 
     assert response.status_code == 403
     assert response.get_json() == {"error": "forbidden"}
+
+def test_delete_nonexistent_reservation(test_db):
+    client = app.test_client()
+
+    with client.session_transaction() as sess:
+        sess["user_id"] = 1
+
+    response = client.delete("/reservations/99999")
+
+    assert response.status_code == 404
+    assert response.get_json() == {
+        "error": "reservation_not_found"
+    }
+
+
