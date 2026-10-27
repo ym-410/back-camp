@@ -30,3 +30,17 @@ def test_login(test_db):
     )
 
     assert response.status_code == 200
+
+def test_wrong_password(test_db):
+    client = app.test_client()
+
+    response = client.post(
+        "/login",
+        json={
+        "email": "test@example.com",
+        "password": "wrong-password",
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.get_json() == {"error": "invalid_credentials"}
