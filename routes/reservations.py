@@ -27,6 +27,21 @@ def create_reservation():
         # 書き込み用ロックを確保
         connection.execute("BEGIN IMMEDIATE")
 
+        # 部屋存在確認
+        cursor.execute(
+            """
+            SELECT id
+            FROM rooms
+            WHERE id = ?
+            """, (room_id,)
+        )
+
+        room = cursor.fetchone()
+
+        if room is None:
+            connection.rollback() # 取得したロックを明示的に解除する
+            return {"error": "room_not_found"}, 404
+
         # 時間範囲確認
         cursor.execute(
             """

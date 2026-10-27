@@ -165,3 +165,24 @@ def test_delete_nonexistent_reservation(test_db):
     }
 
 
+
+def test_create_reservation_with_invalid_room(test_db):
+    client = app.test_client()
+
+    with client.session_transaction() as sess:
+        sess["user_id"] = 1
+
+    response = client.post(
+        "/reservations",
+        json = {
+            "room_id": 9999,
+            "start_time": "2026-10-06 10:00",
+            "end_time": "2026-10-06 11:00",
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.get_json() == {
+        "error": "room_not_found"
+    }
+
